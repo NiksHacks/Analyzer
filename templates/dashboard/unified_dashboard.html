@@ -1,0 +1,477 @@
+{% extends "base.html" %}
+
+{% block title %}Unified Campaign Dashboard - AdInsights{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  .sidebar-item.active {
+    background-color: #283539; /* A slightly lighter shade than the sidebar itself */
+    border-left: 3px solid #3dc6f4;
+  }
+  .sidebar-item.active svg, .sidebar-item.active span {
+    color: #3dc6f4; /* Highlight icon and text */
+  }
+  /* Custom scrollbar for webkit browsers */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #111618; /* Sidebar background */
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #3b4e54; /* A lighter shade for the thumb */
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #283539; /* Darker shade on hover */
+  }
+</style>
+
+{# The original template had a full <html> and <body> structure.
+   Assuming base.html provides the main structure including a sidebar if needed,
+   or this page is meant to be standalone but using Flask's template inheritance.
+   For this integration, I'll keep the main content area and remove the duplicate <html>, <head>, <body> tags.
+   The sidebar from the static HTML is kept here as it's specific to this dashboard layout.
+   If base.html has a global sidebar, this one might need to be removed or integrated differently.
+#}
+
+<div class="flex h-screen overflow-hidden bg-[#111618] text-white" style='font-family: "Space Grotesk", "Noto Sans", sans-serif;'>
+  <!-- Sidebar (Kept from static HTML as it seems specific to this dashboard page) -->
+  <aside class="w-64 bg-[#111618] border-r border-r-[#283539] flex flex-col shrink-0 min-h-0 overflow-y-auto">
+    <div class="p-6 flex items-center gap-3">
+      <div class="size-8 text-[#3dc6f4]">
+        {# AdInsights Logo SVG - Assuming this is correct and desired #}
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M39.5563 34.1455V13.8546C39.5563 15.708 36.8773 17.3437 32.7927 18.3189C30.2914 18.916 27.263 19.2655 24 19.2655C20.737 19.2655 17.7086 18.916 15.2073 18.3189C11.1227 17.3437 8.44365 15.708 8.44365 13.8546V34.1455C8.44365 35.9988 11.1227 37.6346 15.2073 38.6098C17.7086 39.2069 20.737 39.5564 24 39.5564C27.263 39.5564 30.2914 39.2069 32.7927 38.6098C36.8773 37.6346 39.5563 35.9988 39.5563 34.1455Z" fill="currentColor"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M10.4485 13.8519C10.4749 13.9271 10.6203 14.246 11.379 14.7361C12.298 15.3298 13.7492 15.9145 15.6717 16.3735C18.0007 16.9296 20.8712 17.2655 24 17.2655C27.1288 17.2655 29.9993 16.9296 32.3283 16.3735C34.2508 15.9145 35.702 15.3298 36.621 14.7361C37.3796 14.246 37.5251 13.9271 37.5515 13.8519C37.5287 13.7876 37.4333 13.5973 37.0635 13.2931C36.5266 12.8516 35.6288 12.3647 34.343 11.9175C31.79 11.0295 28.1333 10.4437 24 10.4437C19.8667 10.4437 16.2099 11.0295 13.657 11.9175C12.3712 12.3647 11.4734 12.8516 10.9365 13.2931C10.5667 13.5973 10.4713 13.7876 10.4485 13.8519ZM37.5563 18.7877C36.3176 19.3925 34.8502 19.8839 33.2571 20.2642C30.5836 20.9025 27.3973 21.2655 24 21.2655C20.6027 21.2655 17.4164 20.9025 14.7429 20.2642C13.1498 19.8839 11.6824 19.3925 10.4436 18.7877V34.1275C10.4515 34.1545 10.5427 34.4867 11.379 35.027C12.298 35.6207 13.7492 36.2054 15.6717 36.6644C18.0007 37.2205 20.8712 37.5564 24 37.5564C27.1288 37.5564 29.9993 37.2205 32.3283 36.6644C34.2508 36.2054 35.702 35.6207 36.621 35.027C37.4573 34.4867 37.5485 34.1546 37.5563 34.1275V18.7877ZM41.5563 13.8546V34.1455C41.5563 36.1078 40.158 37.5042 38.7915 38.3869C37.3498 39.3182 35.4192 40.0389 33.2571 40.5551C30.5836 41.1934 27.3973 41.5564 24 41.5564C20.6027 41.5564 17.4164 41.1934 14.7429 40.5551C12.5808 40.0389 10.6502 39.3182 9.20848 38.3869C7.84205 37.5042 6.44365 36.1078 6.44365 34.1455L6.44365 13.8546C6.44365 12.2684 7.37223 11.0454 8.39581 10.2036C9.43325 9.3505 10.8137 8.67141 12.343 8.13948C15.4203 7.06909 19.5418 6.44366 24 6.44366C28.4582 6.44366 32.5797 7.06909 35.657 8.13948C37.1863 8.67141 38.5667 9.3505 39.6042 10.2036C40.6278 11.0454 41.5563 12.2684 41.5563 13.8546Z" fill="currentColor"></path></svg>
+      </div>
+      <h2 class="text-white text-xl font-bold leading-tight tracking-[-0.015em]">AdInsights Platform</h2>
+    </div>
+    <nav class="flex-grow px-4 py-2">
+      <ul class="space-y-2">
+        {# The 'Home' link might point to the main dashboard or a separate landing page #}
+        <li><a href="{{ url_for('main.index') or url_for('dashboard.main_dashboard') }}" class="sidebar-item flex items-center gap-3 text-[#9cb2ba] hover:text-white hover:bg-[#283539] py-2 px-3 rounded-lg transition-colors duration-150"><div class="size-5"><svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12.0006 10.5865L16.9504 5.63672L18.3646 7.05093L13.4148 12.0007L18.3646 16.9504L16.9504 18.3646L12.0006 13.4148L7.05087 18.3646L5.63666 16.9504L10.5864 12.0007L5.63666 7.05093L7.05087 5.63672L12.0006 10.5865Z"></path></svg></div><span class="text-sm font-medium">Home</span></a></li>
+        <li class="sidebar-item active"><a href="{{ url_for('dashboard.main_dashboard') }}" class="flex items-center gap-3 text-[#9cb2ba] hover:text-white hover:bg-[#283539] py-2 px-3 rounded-lg transition-colors duration-150"><div class="size-5"><svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12.0006 10.5865L16.9504 5.63672L18.3646 7.05093L13.4148 12.0007L18.3646 16.9504L16.9504 18.3646L12.0006 13.4148L7.05087 18.3646L5.63666 16.9504L10.5864 12.0007L5.63666 7.05093L7.05087 5.63672L12.0006 10.5865Z"></path></svg></div><span class="text-sm font-medium">Campaign Dashboard</span></a></li>
+        <li><a href="{{ url_for('integration.hub') }}" class="sidebar-item flex items-center gap-3 text-[#9cb2ba] hover:text-white hover:bg-[#283539] py-2 px-3 rounded-lg transition-colors duration-150"><div class="size-5"><svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12.0006 10.5865L16.9504 5.63672L18.3646 7.05093L13.4148 12.0007L18.3646 16.9504L16.9504 18.3646L12.0006 13.4148L7.05087 18.3646L5.63666 16.9504L10.5864 12.0007L5.63666 7.05093L7.05087 5.63672L12.0006 10.5865Z"></path></svg></div><span class="text-sm font-medium">Ad Integrations</span></a></li>
+        <li><a href="#" class="sidebar-item flex items-center gap-3 text-[#9cb2ba] hover:text-white hover:bg-[#283539] py-2 px-3 rounded-lg transition-colors duration-150"><div class="size-5"><svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12.0006 10.5865L16.9504 5.63672L18.3646 7.05093L13.4148 12.0007L18.3646 16.9504L16.9504 18.3646L12.0006 13.4148L7.05087 18.3646L5.63666 16.9504L10.5864 12.0007L5.63666 7.05093L7.05087 5.63672L12.0006 10.5865Z"></path></svg></div><span class="text-sm font-medium">Custom Reports</span></a></li>
+        <li><a href="{{ url_for('auth.profile') }}" class="sidebar-item flex items-center gap-3 text-[#9cb2ba] hover:text-white hover:bg-[#283539] py-2 px-3 rounded-lg transition-colors duration-150"><div class="size-5"><svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12.0006 10.5865L16.9504 5.63672L18.3646 7.05093L13.4148 12.0007L18.3646 16.9504L16.9504 18.3646L12.0006 13.4148L7.05087 18.3646L5.63666 16.9504L10.5864 12.0007L5.63666 7.05093L7.05087 5.63672L12.0006 10.5865Z"></path></svg></div><span class="text-sm font-medium">Account Settings</span></a></li>
+      </ul>
+    </nav>
+    <div class="mt-auto p-4 border-t border-t-[#283539]">
+      <a href="{{ url_for('auth.logout') }}" class="w-full flex items-center gap-3 text-[#9cb2ba] hover:text-white hover:bg-[#283539] py-2 px-3 rounded-lg transition-colors duration-150">
+        <div class="size-5"><svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12.0006 10.5865L16.9504 5.63672L18.3646 7.05093L13.4148 12.0007L18.3646 16.9504L16.9504 18.3646L12.0006 13.4148L7.05087 18.3646L5.63666 16.9504L10.5864 12.0007L5.63666 7.05093L7.05087 5.63672L12.0006 10.5865Z"></path></svg></div>
+        <span class="text-sm font-medium">Log Out</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 overflow-y-auto p-6 md:p-8 lg:p-10">
+    <!-- Header inside main content -->
+    <header class="mb-6">
+      <div class="flex items-center justify-between">
+        <h1 class="text-3xl font-bold text-white">Unified Campaign Dashboard</h1>
+        <div class="flex items-center gap-3">
+          <select id="date-range-filter" class="bg-[#283539] border border-[#3b4e54] text-white text-sm rounded-lg focus:ring-[#3dc6f4] focus:border-[#3dc6f4] block p-2.5" title="Select Date Range">
+            <option value="last_7_days" selected>Last 7 Days</option>
+            <option value="last_30_days">Last 30 Days</option>
+            <option value="custom">Custom Date Range</option>
+          </select>
+          <input type="date" id="custom-start-date" class="bg-[#283539] border border-[#3b4e54] text-white text-sm rounded-lg focus:ring-[#3dc6f4] focus:border-[#3dc6f4] block p-2.5 hidden" title="Custom Start Date"/>
+          <input type="date" id="custom-end-date" class="bg-[#283539] border border-[#3b4e54] text-white text-sm rounded-lg focus:ring-[#3dc6f4] focus:border-[#3dc6f4] block p-2.5 hidden" title="Custom End Date"/>
+          <button id="generate-report-button" class="bg-[#3dc6f4] text-[#111618] font-semibold py-2.5 px-5 rounded-lg hover:bg-opacity-90 transition-colors duration-150">
+            Apply Filters
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Platform Tabs -->
+    <div class="mb-6">
+      <div class="border-b border-b-[#283539] flex space-x-1 sm:space-x-4">
+        <button class="platform-tab py-2 px-3 sm:px-4 text-white border-b-2 border-b-white font-medium text-sm sm:text-base" data-platform="all">All Platforms</button>
+        <button class="platform-tab py-2 px-3 sm:px-4 text-[#9cb2ba] border-b-2 border-b-transparent hover:text-white hover:border-b-white transition-colors duration-150 text-sm sm:text-base" data-platform="MetaAds">Meta Ads</button>
+        <button class="platform-tab py-2 px-3 sm:px-4 text-[#9cb2ba] border-b-2 border-b-transparent hover:text-white hover:border-b-white transition-colors duration-150 text-sm sm:text-base" data-platform="GoogleAds">Google Ads</button>
+        <!-- Add more platform tabs as needed -->
+      </div>
+    </div>
+
+    <!-- KPIs Section -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div class="bg-[#1b2427] p-6 rounded-xl shadow-lg">
+        <h3 class="text-sm font-medium text-[#9cb2ba] uppercase tracking-wider">Total Spend</h3>
+        <p id="kpi-total-spend" class="text-3xl font-bold text-white mt-1">$0.00</p>
+        <p id="kpi-total-spend-change" class="text-sm text-gray-400 mt-1">vs previous period</p>
+      </div>
+      <div class="bg-[#1b2427] p-6 rounded-xl shadow-lg">
+        <h3 class="text-sm font-medium text-[#9cb2ba] uppercase tracking-wider">Total Conversions</h3>
+        <p id="kpi-total-conversions" class="text-3xl font-bold text-white mt-1">0</p>
+        <p id="kpi-total-conversions-change" class="text-sm text-gray-400 mt-1">vs previous period</p>
+      </div>
+      <div class="bg-[#1b2427] p-6 rounded-xl shadow-lg">
+        <h3 class="text-sm font-medium text-[#9cb2ba] uppercase tracking-wider">Avg. Cost Per Conversion</h3>
+        <p id="kpi-cpc" class="text-3xl font-bold text-white mt-1">$0.00</p>
+        <p id="kpi-cpc-change" class="text-sm text-gray-400 mt-1">vs previous period</p>
+      </div>
+      <div class="bg-[#1b2427] p-6 rounded-xl shadow-lg">
+        <h3 class="text-sm font-medium text-[#9cb2ba] uppercase tracking-wider">Return on Ad Spend</h3>
+        <p id="kpi-roas" class="text-3xl font-bold text-white mt-1">N/A</p>
+        <p id="kpi-roas-change" class="text-sm text-gray-400 mt-1">(requires revenue data)</p>
+      </div>
+    </div>
+
+    <!-- Performance Over Time Chart Section -->
+    <div class="bg-[#1b2427] p-6 rounded-xl shadow-lg mb-8">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+        <h3 class="text-xl font-semibold text-white mb-2 sm:mb-0">Overall Performance Over Time</h3>
+        <select id="metric-for-chart-filter" class="bg-[#283539] border border-[#3b4e54] text-white text-sm rounded-lg focus:ring-[#3dc6f4] focus:border-[#3dc6f4] block p-2.5" title="Select Metric for Chart">
+          <option value="spend" selected>Total Spend</option>
+          <option value="conversions">Total Conversions</option>
+          <option value="clicks">Total Clicks</option>
+          <option value="impressions">Total Impressions</option>
+        </select>
+      </div>
+      <div class="h-96"> <!-- Fixed height container for the chart -->
+        <canvas id="performance-chart" aria-label="Performance Over Time Chart" role="img"></canvas>
+      </div>
+    </div>
+
+    <!-- Placeholder Sections for Future Content -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      <div class="lg:col-span-1 bg-[#1b2427] p-6 rounded-xl shadow-lg">
+        <h3 class="text-xl font-semibold text-white mb-4">Performance Breakdown Details</h3>
+        <p class="text-[#9cb2ba]">Detailed breakdown by Audience, Device, Country, etc. will be shown here. (Coming Soon)</p>
+        <!-- Example: <canvas id="audience-breakdown-chart"></canvas> -->
+      </div>
+      <div class="lg:col-span-1 bg-[#1b2427] p-6 rounded-xl shadow-lg">
+        <h3 class="text-xl font-semibold text-white mb-4">Campaign Budget Status</h3>
+        <p class="text-[#9cb2ba]">Budget pacing and allocation overview will be displayed here. (Coming Soon)</p>
+        <!-- Example: <div id="budget-pacing-info"></div> -->
+      </div>
+      <div class="lg:col-span-1 bg-[#1b2427] p-6 rounded-xl shadow-lg">
+        <h3 class="text-xl font-semibold text-white mb-4">Key Insights & Alerts</h3>
+        <p class="text-[#9cb2ba]">Automated insights and real-time alerts will appear here. (Coming Soon)</p>
+        <!-- Example: <div id="real-time-alerts"></div> -->
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}
+{# The JavaScript part is mostly for functionality, but some labels/alerts could be reviewed if they were static #}
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const kpiTotalSpendEl = document.getElementById('kpi-total-spend');
+    const kpiTotalSpendChangeEl = document.getElementById('kpi-total-spend-change');
+    const kpiTotalConversionsEl = document.getElementById('kpi-total-conversions');
+    const kpiTotalConversionsChangeEl = document.getElementById('kpi-total-conversions-change');
+    const kpiCpcEl = document.getElementById('kpi-cpc');
+    const kpiCpcChangeEl = document.getElementById('kpi-cpc-change');
+    const kpiRoasEl = document.getElementById('kpi-roas'); // ROAS is still N/A
+    const kpiRoasChangeEl = document.getElementById('kpi-roas-change');
+
+    const dateRangeFilterEl = document.getElementById('date-range-filter');
+    const customStartDateEl = document.getElementById('custom-start-date');
+    const customEndDateEl = document.getElementById('custom-end-date');
+    const generateReportButtonEl = document.getElementById('generate-report-button');
+    const platformTabs = document.querySelectorAll('.platform-tab');
+    const metricForChartFilterEl = document.getElementById('metric-for-chart-filter');
+    const performanceChartCanvas = document.getElementById('performance-chart');
+    let performanceChart;
+
+    // Budget Status Elements
+    const budgetUtilizedPercentageTextEl = document.getElementById('budget-utilized-percentage-text');
+    const budgetProgressBarEl = document.getElementById('budget-progress-bar');
+    const budgetSummaryTextEl = document.getElementById('budget-summary-text');
+
+    let currentFilters = {
+        date_range: dateRangeFilterEl.value, // 'last_7_days', 'last_30_days', 'custom'
+        start_date: '',
+        end_date: '',
+        platform: 'all', // 'all', 'MetaAds', 'GoogleAds'
+        metric_for_chart: metricForChartFilterEl.value // 'spend', 'conversions', etc.
+    };
+
+    function updateKPIs(data) {
+        kpiTotalSpendEl.textContent = '$' + parseFloat(data.total_spend || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        kpiTotalConversionsEl.textContent = parseInt(data.total_conversions || 0).toLocaleString();
+        kpiCpcEl.textContent = '$' + parseFloat(data.cost_per_conversion || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        kpiRoasEl.textContent = data.return_on_ad_spend ? parseFloat(data.return_on_ad_spend).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A';
+
+        // Update percentage changes with color
+        const kpiElements = [
+            { el: kpiTotalSpendChangeEl, value: data.total_spend_change_val, text: data.total_spend_change, higherIsBetter: false }, // For spend, lower change might be better in some contexts, but typically positive growth is shown green.
+            { el: kpiTotalConversionsChangeEl, value: data.total_conversions_change_val, text: data.total_conversions_change, higherIsBetter: true },
+            { el: kpiCpcChangeEl, value: data.cost_per_conversion_change_val, text: data.cost_per_conversion_change, higherIsBetter: false }, // Lower CPC is better
+            { el: kpiRoasChangeEl, value: data.return_on_ad_spend_change_val, text: data.return_on_ad_spend_change, higherIsBetter: true }
+        ];
+
+        kpiElements.forEach(kpi => {
+            if (kpi.el) {
+                kpi.el.textContent = kpi.text || 'N/A';
+                kpi.el.classList.remove('text-green-500', 'text-red-500', 'text-gray-400');
+                if (kpi.text === 'N/A' || kpi.value === null || kpi.value === undefined) {
+                    kpi.el.classList.add('text-gray-400');
+                } else if (kpi.value > 0) {
+                    kpi.el.classList.add(kpi.higherIsBetter ? 'text-green-500' : 'text-red-500');
+                } else if (kpi.value < 0) {
+                    kpi.el.classList.add(kpi.higherIsBetter ? 'text-red-500' : 'text-green-500');
+                } else {
+                    kpi.el.classList.add('text-gray-400'); // Or specific style for 0%
+                }
+            }
+        });
+    }
+
+    async function fetchKPIs() {
+        let url = `/dashboard/api/kpis?date_range=${currentFilters.date_range}&platform=${currentFilters.platform}`;
+        if (currentFilters.date_range === 'custom' && currentFilters.start_date && currentFilters.end_date) {
+            url += `&start_date=${currentFilters.start_date}&end_date=${currentFilters.end_date}`;
+        }
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            updateKPIs(data);
+        } catch (error) {
+            console.error("Error fetching KPIs:", error);
+            // Display error to user if needed
+        }
+    }
+
+    function updateBudgetStatus(data) {
+        if (budgetUtilizedPercentageTextEl && budgetProgressBarEl && budgetSummaryTextEl) {
+            budgetUtilizedPercentageTextEl.textContent = (data.budget_utilized_percentage || 0).toFixed(1) + '%';
+            budgetProgressBarEl.style.width = (data.budget_utilized_percentage || 0) + '%';
+            budgetSummaryTextEl.textContent = `$${(data.current_spend || 0).toLocaleString(undefined, {maximumFractionDigits:0})} / $${(data.total_budget || 0).toLocaleString(undefined, {maximumFractionDigits:0})}`;
+        }
+    }
+
+    async function fetchBudgetStatus() {
+        try {
+            const response = await fetch('/dashboard/api/budget_status'); // No filters for now
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            updateBudgetStatus(data);
+        } catch (error) {
+            console.error("Error fetching budget status:", error);
+        }
+    }
+
+
+    function renderPerformanceChart(chartData) {
+        if (performanceChart) {
+            performanceChart.destroy();
+        }
+        const platformColors = {
+            'MetaAds': 'rgba(59, 130, 246, 0.7)', // Blue
+            'GoogleAds': 'rgba(234, 179, 8, 0.7)',   // Yellow/Amber
+            // Add more platform colors as needed
+        };
+         const platformBorderColors = {
+            'MetaAds': 'rgba(59, 130, 246, 1)',
+            'GoogleAds': 'rgba(234, 179, 8, 1)',
+        };
+
+        performanceChart = new Chart(performanceChartCanvas, {
+            type: 'line',
+            data: {
+                labels: chartData.labels,
+                datasets: chartData.datasets.map(dataset => ({
+                    ...dataset,
+                    fill: false,
+                    borderColor: platformBorderColors[dataset.label] || 'rgba(255, 99, 132, 1)',
+                    backgroundColor: platformColors[dataset.label] || 'rgba(255, 99, 132, 0.7)',
+                    tension: 0.1
+                }))
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, ticks: { color: '#9cb2ba' }, grid: { color: '#283539' } },
+                    x: { ticks: { color: '#9cb2ba' }, grid: { color: '#283539' } }
+                },
+                plugins: { legend: { labels: { color: '#9cb2ba' } } }
+            }
+        });
+    }
+
+    async function fetchPerformanceChartData() {
+        let url = `/dashboard/api/performance_breakdown?date_range=${currentFilters.date_range}&metric=${currentFilters.metric_for_chart}`;
+        if (currentFilters.date_range === 'custom' && currentFilters.start_date && currentFilters.end_date) {
+            url += `&start_date=${currentFilters.start_date}&end_date=${currentFilters.end_date}`;
+        }
+        if (currentFilters.platform !== 'all') { // Add platform filter to URL
+            url += `&platform=${currentFilters.platform}`;
+        }
+
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            renderPerformanceChart(data);
+        } catch (error) {
+            console.error("Error fetching performance chart data:", error);
+        }
+    }
+
+    function handleFilterChange() {
+        fetchKPIs();
+        fetchPerformanceChartData();
+        // fetchBudgetStatus(); // Budget status might not need date/platform filters
+    }
+
+    dateRangeFilterEl.addEventListener('change', function() {
+        currentFilters.date_range = this.value;
+        if (this.value === 'custom') {
+            customStartDateEl.classList.remove('hidden');
+            customEndDateEl.classList.remove('hidden');
+            // Don't fetch yet, wait for generate report button or date changes
+        } else {
+            customStartDateEl.classList.add('hidden');
+            customEndDateEl.classList.add('hidden');
+            currentFilters.start_date = ''; // Clear custom dates
+            currentFilters.end_date = '';
+            handleFilterChange();
+        }
+    });
+
+    generateReportButtonEl.addEventListener('click', function() {
+        if (currentFilters.date_range === 'custom') {
+            currentFilters.start_date = customStartDateEl.value;
+            currentFilters.end_date = customEndDateEl.value;
+            if (!currentFilters.start_date || !currentFilters.end_date) {
+                alert("Please select both start and end dates for custom range.");
+                return;
+            }
+            if (new Date(currentFilters.start_date) > new Date(currentFilters.end_date)) {
+                alert("Start date cannot be after end date.");
+                return;
+            }
+        }
+        handleFilterChange();
+    });
+
+    // Also fetch if custom dates are changed directly
+    customStartDateEl.addEventListener('change', () => { if(currentFilters.date_range === 'custom') currentFilters.start_date = customStartDateEl.value; });
+    customEndDateEl.addEventListener('change', () => { if(currentFilters.date_range === 'custom') currentFilters.end_date = customEndDateEl.value; });
+
+
+    platformTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            platformTabs.forEach(t => {
+                t.classList.remove('text-white', 'border-b-white');
+                t.classList.add('text-[#9cb2ba]', 'border-b-transparent');
+            });
+            this.classList.add('text-white', 'border-b-white');
+            this.classList.remove('text-[#9cb2ba]', 'border-b-transparent');
+            currentFilters.platform = this.dataset.platform;
+            handleFilterChange();
+        });
+    });
+
+    metricForChartFilterEl.addEventListener('change', function() {
+        currentFilters.metric_for_chart = this.value;
+        fetchPerformanceChartData(); // Only chart data needs refetching for metric change
+    });
+
+    // Initial data load
+    fetchKPIs();
+    fetchPerformanceChartData();
+    fetchBudgetStatus();
+});
+</script>
+{% endblock %}
+                <option value="last_7_days" selected>Last 7 Days</option>
+                <option value="last_30_days">Last 30 Days</option>
+                <option value="custom">Custom Range</option>
+              </select>
+              <button class="bg-[#3dc6f4] text-[#111618] font-semibold py-2 px-4 rounded-lg hover:bg-opacity-90 transition-colors duration-150">
+                Generate Report
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <!-- Platform Tabs -->
+        <div class="mb-6">
+          <div class="border-b border-b-[#283539] flex space-x-4">
+            <button class="platform-tab py-2 px-4 text-white border-b-2 border-b-white font-medium" data-platform="all">All Platforms</button>
+            <button class="platform-tab py-2 px-4 text-[#9cb2ba] border-b-2 border-b-transparent hover:text-white hover:border-b-white transition-colors duration-150" data-platform="MetaAds">Meta Ads</button>
+            <button class="platform-tab py-2 px-4 text-[#9cb2ba] border-b-2 border-b-transparent hover:text-white hover:border-b-white transition-colors duration-150" data-platform="GoogleAds">Google Ads</button>
+            <!-- Add more platform tabs as needed -->
+          </div>
+        </div>
+
+        <!-- KPIs -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="bg-[#1b2427] p-6 rounded-xl shadow-lg">
+            <h3 class="text-sm font-medium text-[#9cb2ba] uppercase">Total Spend</h3>
+            <p id="kpi-total-spend" class="text-3xl font-bold text-white mt-1">$0.00</p>
+            <p id="kpi-total-spend-change" class="text-sm text-green-400 mt-1">+0%</p>
+          </div>
+          <div class="bg-[#1b2427] p-6 rounded-xl shadow-lg">
+            <h3 class="text-sm font-medium text-[#9cb2ba] uppercase">Total Conversions</h3>
+            <p id="kpi-total-conversions" class="text-3xl font-bold text-white mt-1">0</p>
+            <p id="kpi-total-conversions-change" class="text-sm text-green-400 mt-1">+0%</p>
+          </div>
+          <div class="bg-[#1b2427] p-6 rounded-xl shadow-lg">
+            <h3 class="text-sm font-medium text-[#9cb2ba] uppercase">Cost Per Conversion</h3>
+            <p id="kpi-cpc" class="text-3xl font-bold text-white mt-1">$0.00</p>
+            <p id="kpi-cpc-change" class="text-sm text-red-400 mt-1">+0%</p> <!-- Example of red for negative change -->
+          </div>
+          <div class="bg-[#1b2427] p-6 rounded-xl shadow-lg">
+            <h3 class="text-sm font-medium text-[#9cb2ba] uppercase">Return on Ad Spend (ROAS)</h3>
+            <p id="kpi-roas" class="text-3xl font-bold text-white mt-1">N/A</p>
+            <p id="kpi-roas-change" class="text-sm text-gray-400 mt-1">Requires revenue data</p>
+          </div>
+        </div>
+
+        <!-- Performance Over Time Chart -->
+        <div class="bg-[#1b2427] p-6 rounded-xl shadow-lg mb-8">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-semibold text-white">Performance Over Time</h3>
+            <select id="metric-for-chart-filter" class="bg-[#283539] border border-[#3b4e54] text-white text-sm rounded-lg focus:ring-[#3dc6f4] focus:border-[#3dc6f4] block p-2">
+              <option value="spend" selected>Spend</option>
+              <option value="conversions">Conversions</option>
+              <option value="clicks">Clicks</option>
+              <option value="impressions">Impressions</option>
+            </select>
+          </div>
+          <div class="h-96"> <!-- Fixed height container for the chart -->
+            <canvas id="performance-chart"></canvas>
+          </div>
+        </div>
+
+        <!-- Placeholder for other sections -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div class="lg:col-span-1 bg-[#1b2427] p-6 rounded-xl shadow-lg">
+            <h3 class="text-xl font-semibold text-white mb-4">Performance Breakdown</h3>
+            <p class="text-[#9cb2ba]">Detailed breakdown by Audience, Device, Country, etc. (To be implemented)</p>
+            <!-- Example: <canvas id="audience-breakdown-chart"></canvas> -->
+          </div>
+          <div class="lg:col-span-1 bg-[#1b2427] p-6 rounded-xl shadow-lg">
+            <h3 class="text-xl font-semibold text-white mb-4">Budget Status</h3>
+            <p class="text-[#9cb2ba]">Budget pacing and allocation overview. (To be implemented)</p>
+            <!-- Example: <div id="budget-pacing-info"></div> -->
+          </div>
+          <div class="lg:col-span-1 bg-[#1b2427] p-6 rounded-xl shadow-lg">
+            <h3 class="text-xl font-semibold text-white mb-4">Real-time Visualizations</h3>
+            <p class="text-[#9cb2ba]">Live data streams and alerts. (To be implemented)</p>
+            <!-- Example: <div id="real-time-alerts"></div> -->
+          </div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

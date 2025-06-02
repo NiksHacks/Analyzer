@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title | default('Confirmation - AdInsights') }}{% endblock %}
+
+{% block content %}
+<div class="min-h-[calc(100vh-150px)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-900"> {# Adjusted min-h and bg color #}
+    <div class="max-w-md w-full space-y-8 bg-gray-800 p-8 sm:p-10 rounded-xl shadow-2xl text-center">
+        <div>
+            {# Dynamic Icon Placeholder - Can be enhanced with more specific icons based on title/status later if needed #}
+            <div class="mx-auto flex items-center justify-center h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-green-500 mb-4 sm:mb-5"> {# Adjusted icon color and size #}
+                <svg class="h-6 w-6 sm:h-8 sm:w-8 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <h2 class="mt-6 text-center text-2xl sm:text-3xl font-bold text-white">
+                {{ title | default('Action Successful') }} {# Changed default title slightly #}
+            </h2>
+            <p class="mt-2 text-center text-sm sm:text-base text-gray-300">
+                {{ message | default('Your requested action has been processed successfully.') }} {# Made default message slightly more specific #}
+            </p>
+        </div>
+        {% if button_url and button_text %}
+        <div class="mt-5 sm:mt-6">
+            {# Button text and URL are dynamic, so no changes here unless there was a static fallback #}
+            <a href="{{ button_url }}" class="inline-flex justify-center w-full sm:w-auto rounded-md border border-transparent shadow-sm px-4 py-2 sm:px-6 sm:py-3 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-gray-800 sm:text-sm transition-colors">
+                {{ button_text }}
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}Ad Platform Integrations - AdInsights{% endblock %}
+
+{% block content %}
+<div class="container mx-auto mt-6 sm:mt-10 p-4">
+    <h1 class="text-2xl sm:text-3xl font-bold text-white mb-6 sm:mb-8 text-center sm:text-left">Manage Your Ad Platform Connections</h1>
+
+    {# META ADS SECTION #}
+    <div class="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-xl mb-6 sm:mb-8">
+        <h2 class="text-xl sm:text-2xl font-semibold text-white mb-4">Meta Ads (Facebook & Instagram)</h2>
+
+        {% set meta_platform_value = PlatformNameEnum.META_ADS.value %}
+        {% set meta_integrations = connected_platforms[meta_platform_value] %}
+
+        {% if not meta_integrations or meta_integrations | selectattr('ad_account_id', '!=', 'pending_selection') | list | length == 0 and meta_integrations | selectattr('ad_account_id', '==', 'pending_selection') | list | length == 0 %}
+             {# This condition checks if there are no integrations at all for Meta #}
+            <div class="text-center p-4 border-2 border-dashed border-gray-700 rounded-lg">
+                <p class="text-gray-400 mb-3 text-sm sm:text-base">No Meta Ads accounts are currently connected.</p>
+                <a href="{{ url_for('integration.meta_ads_connect') }}"
+                   class="inline-block p-2 sm:p-3 px-4 sm:px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-sm font-medium text-sm sm:text-base transition-colors">
+                   Connect Meta Ads Account
+                </a>
+            </div>
+        {% else %}
+            <ul class="space-y-3 sm:space-y-4">
+                {% for integration in meta_integrations %}
+                <li class="bg-gray-700 p-3 sm:p-4 rounded-md shadow flex flex-wrap items-center justify-between gap-2 sm:gap-4">
+                    <div class="flex-grow">
+                        <p class="text-sm sm:text-base font-semibold text-white">
+                            {{ integration.ad_account_name if integration.ad_account_id != 'pending_selection' else 'Meta Ads Connection (Pending Ad Account Selection)' }}
+                        </p>
+                        {% if integration.ad_account_id != 'pending_selection' %}
+                            <p class="text-xs text-gray-400">Ad Account ID: {{ integration.ad_account_id }}</p>
+                        {% endif %}
+
+                        <p class="text-xs mt-1">
+                            Status:
+                            {% if integration.ad_account_id == 'pending_selection' %}
+                                <span class="font-medium text-yellow-400">Action Required: Select Ad Account</span>
+                            {% elif integration.status.value == 'active' %}
+                                <span class="font-medium text-green-400">Connected & Active</span>
+                            {% elif integration.status.value == 'revoked' or integration.status.value == 'expired' %}
+                                <span class="font-medium text-red-400">{{ integration.status.value | title }} - Please Reconnect</span>
+                            {% else %}
+                                <span class="font-medium text-gray-400">{{ integration.status.value | title }}</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                        {% if integration.ad_account_id == 'pending_selection' %}
+                            <a href="{{ url_for('integration.metaads_select_account', integration_id=integration.id) }}"
+                               class="p-2 px-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-md text-xs sm:text-sm font-medium transition-colors">
+                               Select Ad Account
+                            </a>
+                        {% elif integration.status.value == 'active' %}
+                            <form action="{{ url_for('integration.meta_ads_fetch_data', integration_id=integration.id) }}" method="POST" class="inline-block">
+                                <button type="submit" class="p-2 px-3 bg-green-600 hover:bg-green-700 text-white rounded-md text-xs sm:text-sm font-medium transition-colors" title="Fetch the latest campaign data for the past 7 days.">
+                                    Refresh Data
+                                </button>
+                            </form>
+                            <a href="#" title="Disconnect (Coming Soon)" class="p-2 px-3 bg-red-600 hover:bg-red-700 text-white rounded-md text-xs sm:text-sm font-medium cursor-not-allowed opacity-70">
+                                Disconnect
+                            </a>
+                        {% else %} {# For EXPIRED or REVOKED status, prompt to reconnect #}
+                             <a href="{{ url_for('integration.meta_ads_connect') }}"
+                               class="p-2 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs sm:text-sm font-medium transition-colors">
+                               Reconnect
+                            </a>
+                        {% endif %}
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            <div class="mt-4 sm:mt-6">
+                <a href="{{ url_for('integration.meta_ads_connect') }}"
+                   class="inline-block p-2 px-4 bg-gray-600 hover:bg-gray-500 text-white rounded-md shadow-sm font-medium text-xs sm:text-sm transition-colors">
+                   + Connect Another Meta Ads Account
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    {# GOOGLE ADS SECTION #}
+    <div class="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-xl mb-6 sm:mb-8">
+        <h2 class="text-xl sm:text-2xl font-semibold text-white mb-4">Google Ads</h2>
+
+        {% set google_platform_value = PlatformNameEnum.GOOGLE_ADS.value %}
+        {% set google_integrations = connected_platforms[google_platform_value] %}
+
+        {% if not google_integrations or google_integrations | selectattr('ad_account_id', '!=', 'pending_selection') | list | length == 0 and google_integrations | selectattr('ad_account_id', '==', 'pending_selection') | list | length == 0 %}
+            <div class="text-center p-4 border-2 border-dashed border-gray-700 rounded-lg">
+                <p class="text-gray-400 mb-3 text-sm sm:text-base">No Google Ads accounts are currently connected.</p>
+                <a href="{{ url_for('integration.google_ads_connect') }}"
+                   class="inline-block p-2 sm:p-3 px-4 sm:px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-sm font-medium text-sm sm:text-base transition-colors">
+                   Connect Google Ads Account
+                </a>
+            </div>
+        {% else %}
+            <ul class="space-y-3 sm:space-y-4">
+                {% for integration in google_integrations %}
+                <li class="bg-gray-700 p-3 sm:p-4 rounded-md shadow flex flex-wrap items-center justify-between gap-2 sm:gap-4">
+                    <div class="flex-grow">
+                        <p class="text-sm sm:text-base font-semibold text-white">
+                            {{ integration.ad_account_name if integration.ad_account_id != 'pending_selection' else 'Google Ads Connection (Pending Customer ID)' }}
+                        </p>
+                         {% if integration.ad_account_id != 'pending_selection' %}
+                            <p class="text-xs text-gray-400">Google Ads Customer ID: {{ integration.ad_account_id }}</p>
+                        {% endif %}
+                        <p class="text-xs mt-1">
+                            Status:
+                            {% if integration.ad_account_id == 'pending_selection' %}
+                                <span class="font-medium text-yellow-400">Action Required: Provide Customer ID</span>
+                            {% elif integration.status.value == 'active' %}
+                                <span class="font-medium text-green-400">Connected & Active</span>
+                            {% elif integration.status.value == 'revoked' or integration.status.value == 'expired' %}
+                                <span class="font-medium text-red-400">{{ integration.status.value | title }} - Please Reconnect</span>
+                            {% else %}
+                                <span class="font-medium text-gray-400">{{ integration.status.value | title }}</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                        {% if integration.ad_account_id == 'pending_selection' %}
+                             <a href="{{ url_for('integration.googleads_select_account', integration_id=integration.id) }}"
+                               class="p-2 px-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-md text-xs sm:text-sm font-medium transition-colors">
+                               Set Customer ID
+                            </a>
+                        {% elif integration.status.value == 'active' %}
+                            <form action="{{ url_for('integration.google_ads_fetch_data', integration_id=integration.id) }}" method="POST" class="inline-block">
+                                <button type="submit" class="p-2 px-3 bg-green-600 hover:bg-green-700 text-white rounded-md text-xs sm:text-sm font-medium transition-colors" title="Fetch the latest campaign data for the past 7 days.">
+                                    Refresh Data
+                                </button>
+                            </form>
+                            <a href="#" title="Disconnect (Coming Soon)" class="p-2 px-3 bg-red-600 hover:bg-red-700 text-white rounded-md text-xs sm:text-sm font-medium cursor-not-allowed opacity-70">
+                                Disconnect
+                            </a>
+                        {% else %} {# For EXPIRED or REVOKED status, prompt to reconnect #}
+                             <a href="{{ url_for('integration.google_ads_connect') }}"
+                               class="p-2 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs sm:text-sm font-medium transition-colors">
+                               Reconnect
+                            </a>
+                        {% endif %}
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+             <div class="mt-4 sm:mt-6">
+                <a href="{{ url_for('integration.google_ads_connect') }}"
+                   class="inline-block p-2 px-4 bg-gray-600 hover:bg-gray-500 text-white rounded-md shadow-sm font-medium text-xs sm:text-sm transition-colors">
+                   + Connect Another Google Ads Account
+                </a>
+            </div>
+        {% endif %}
+    </div>
+    {# Removed Static Progress Bar "Step 1/4" #}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Any page-specific JavaScript can go here if needed in the future,
+// for example, to handle disconnect confirmation modals.
+// For now, the buttons are simple forms or links.
+</script>
+{% endblock %}

@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Optimization & Automation - AdInsights{% endblock %}
+
+{% block content %}
+<div class="container mx-auto mt-6 sm:mt-10 p-4">
+    <h1 class="text-3xl sm:text-4xl font-bold text-white mb-6 sm:mb-8 text-center sm:text-left">Optimization & Scenario Planning</h1>
+
+    <!-- Automated Optimization Suggestions Section -->
+    <div class="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-xl mb-6 sm:mb-8">
+        <h2 class="text-xl sm:text-2xl font-semibold text-white mb-2">Automated Optimization Suggestions</h2>
+        <p class="text-sm text-gray-400 mb-4">Let AdInsights analyze your recent campaign performance and provide actionable suggestions for improvement.</p>
+        <button id="generate-optimization-suggestions-btn" class="p-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded-md shadow-sm font-medium text-sm sm:text-base">
+            Generate Optimization Suggestions
+        </button>
+        <div id="optimization-suggestions-container" class="mt-4 text-gray-300 space-y-3">
+            <p class="text-gray-400 text-sm">Click the button above to generate tailored optimization suggestions.</p>
+        </div>
+    </div>
+
+    <!-- Budget Simulator Section -->
+    <div class="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-xl mb-6 sm:mb-8">
+        <h2 class="text-xl sm:text-2xl font-semibold text-white mb-2">Campaign Budget Simulator</h2>
+        <p class="text-gray-300 text-sm sm:text-base mb-4">
+            Project potential outcomes by simulating different budget scenarios.
+            Enter your campaign's current average Cost Per Click (CPC) and Click-based Conversion Rate (CVR), then list various budget amounts to see estimated clicks, conversions, and Cost Per Acquisition (CPA).
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 items-end">
+            <div>
+                <label for="bs-current-cpc" class="block text-xs sm:text-sm font-medium text-gray-400">Current Avg. CPC ($):</label>
+                <input type="number" step="0.01" min="0.01" id="bs-current-cpc" name="bs-current-cpc" required placeholder="e.g., 1.25" class="form-input mt-1 block w-full p-2 bg-gray-700 text-white border-gray-600 rounded-md shadow-sm text-xs sm:text-sm">
+            </div>
+            <div>
+                <label for="bs-current-cvr" class="block text-xs sm:text-sm font-medium text-gray-400">Current Avg. CVR (from Clicks, %):</label>
+                <input type="number" step="0.1" min="0" max="100" id="bs-current-cvr" name="bs-current-cvr" required placeholder="e.g., 5 for 5%" class="form-input mt-1 block w-full p-2 bg-gray-700 text-white border-gray-600 rounded-md shadow-sm text-xs sm:text-sm">
+            </div>
+            <div>
+                <label for="bs-budget-scenarios" class="block text-xs sm:text-sm font-medium text-gray-400">Enter Budget Scenarios ($, comma-separated):</label>
+                <input type="text" id="bs-budget-scenarios" name="bs-budget-scenarios" required placeholder="e.g., 500, 1000, 1500" class="form-input mt-1 block w-full p-2 bg-gray-700 text-white border-gray-600 rounded-md shadow-sm text-xs sm:text-sm">
+            </div>
+        </div>
+        <div class="text-center md:text-left">
+            <button id="bs-simulate-btn" class="p-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md shadow-sm font-medium text-sm sm:text-base">
+                Simulate Budget Impact
+            </button>
+        </div>
+        <div id="bs-results-container" class="mt-6 text-gray-300">
+             <p class="text-gray-400 text-sm">Your simulation results will appear here.</p>
+        </div>
+    </div>
+
+    <!-- Placeholder for Automated Bid Adjustments -->
+    <div class="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-xl mb-6 sm:mb-8">
+        <h2 class="text-xl sm:text-2xl font-semibold text-white mb-2">Automated Bid Adjustments <span class="text-xs align-top bg-yellow-500 text-yellow-900 px-1.5 py-0.5 rounded-full">Coming Soon</span></h2>
+        <p class="text-gray-400 text-sm sm:text-base">Define rules and let AdInsights intelligently adjust your campaign bids to optimize towards your performance goals, saving you time and improving efficiency.</p>
+        <div class="mt-4">
+             <button disabled class="p-2 px-4 bg-gray-600 text-white rounded-md shadow-sm font-medium text-sm sm:text-base cursor-not-allowed opacity-70" title="This feature is coming soon">Configure Bid Automation Rules</button>
+        </div>
+    </div>
+
+    <!-- Placeholder for A/B Test Analyzer -->
+    <div class="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-xl mb-6 sm:mb-8">
+        <h2 class="text-xl sm:text-2xl font-semibold text-white mb-2">A/B Test Analyzer <span class="text-xs align-top bg-yellow-500 text-yellow-900 px-1.5 py-0.5 rounded-full">Coming Soon</span></h2>
+        <p class="text-gray-400 text-sm sm:text-base">Upload your A/B test data or connect your testing platform to analyze results and determine winning ad creatives, copy, or targeting strategies with statistical significance.</p>
+         <div class="mt-4">
+             <button disabled class="p-2 px-4 bg-gray-600 text-white rounded-md shadow-sm font-medium text-sm sm:text-base cursor-not-allowed opacity-70" title="This feature is coming soon">Analyze A/B Test Results</button>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() if super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // --- Automated Optimization Suggestions ---
+    const generateSuggestionsBtn = document.getElementById('generate-optimization-suggestions-btn');
+    const suggestionsContainer = document.getElementById('optimization-suggestions-container');
+    // Icons for suggestions
+    const highPriorityIcon = `<svg class="inline-block w-4 h-4 text-red-400 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM10 13a1 1 0 11-2 0 1 1 0 012 0zm-1-3a1 1 0 00-1 1v3a1 1 0 102 0V9a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>`;
+    const mediumPriorityIcon = `<svg class="inline-block w-4 h-4 text-yellow-400 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>`;
+    const positiveIcon = `<svg class="inline-block w-4 h-4 text-green-400 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 110-16 8 8 0 010 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>`;
+    const infoIcon = `<svg class="inline-block w-4 h-4 text-blue-400 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>`;
+
+
+    if (generateSuggestionsBtn) {
+        generateSuggestionsBtn.addEventListener('click', function() {
+            if(suggestionsContainer) suggestionsContainer.innerHTML = '<p class="text-gray-400 text-sm">Generating suggestions, please wait...</p>';
+            fetch("{{ url_for('optimization.get_optimization_suggestions') }}")
+                .then(response => response.ok ? response.json() : response.json().then(err => Promise.reject(err)))
+                .then(data => {
+                    if (!suggestionsContainer) return;
+                    if (data && data.length > 0) {
+                        let html = '<ul class="list-none space-y-3">';
+                        const priorityOrder = { "High": 1, "Medium": 2, "Positive": 3, "Info": 4, "General": 5 };
+                        data.sort((a,b) => (priorityOrder[a.priority] || 99) - (priorityOrder[b.priority] || 99) );
+                        data.forEach(sugg => {
+                            let priorityColorClass = 'text-gray-300'; let icon = infoIcon;
+                            if (sugg.priority === 'High') { priorityColorClass = 'text-red-400'; icon = highPriorityIcon; }
+                            else if (sugg.priority === 'Medium') { priorityColorClass = 'text-yellow-400'; icon = mediumPriorityIcon; }
+                            else if (sugg.priority === 'Positive') { priorityColorClass = 'text-green-400'; icon = positiveIcon; }
+
+                            html += `<li class="p-3 sm:p-4 bg-gray-700 rounded-md shadow hover:shadow-lg transition-shadow duration-150">`;
+                            html += `<strong class="block text-md sm:text-lg ${priorityColorClass} flex items-center gap-2">${icon} ${sugg.priority} Priority</strong>`;
+                            html += `<span class="text-xs text-gray-500 block mb-1">${sugg.category} | Source: ${sugg.source_insight}</span>`;
+                            if (sugg.related_campaign_name) {
+                                html += `<p class="text-xs sm:text-sm text-gray-400 mb-1">Campaign: ${sugg.related_campaign_name} (${sugg.platform || ''})</p>`;
+                            }
+                            html += `<p class="text-sm sm:text-base text-gray-200">${sugg.suggestion}</p>`;
+                            html += `</li>`;
+                        });
+                        html += '</ul>';
+                        suggestionsContainer.innerHTML = html;
+                    } else {
+                        suggestionsContainer.innerHTML = '<p class="text-gray-400 text-sm">No specific suggestions available at this moment.</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error("Error fetching optimization suggestions:", error);
+                    if(suggestionsContainer) suggestionsContainer.innerHTML = `<p class="text-red-400 text-sm">Error generating suggestions: ${error.error || error.message || 'Unknown error'}</p>`;
+                });
+        });
+    }
+
+    // --- Budget Simulator ---
+    const bsSimulateBtn = document.getElementById('bs-simulate-btn');
+    const bsResultsContainer = document.getElementById('bs-results-container');
+    const bsCurrentCpcInput = document.getElementById('bs-current-cpc');
+    const bsCurrentCvrInput = document.getElementById('bs-current-cvr');
+    const bsBudgetScenariosInput = document.getElementById('bs-budget-scenarios');
+
+    if (bsSimulateBtn) {
+        bsSimulateBtn.addEventListener('click', function() {
+            const cpc = parseFloat(bsCurrentCpcInput.value);
+            const cvrPercentage = parseFloat(bsCurrentCvrInput.value);
+            const budgetScenariosStr = bsBudgetScenariosInput.value;
+
+            if (isNaN(cpc) || cpc <= 0) {
+                bsResultsContainer.innerHTML = '<p class="text-red-400 text-sm">Please enter a valid CPC greater than 0.</p>'; return;
+            }
+            if (isNaN(cvrPercentage) || cvrPercentage < 0 || cvrPercentage > 100) {
+                bsResultsContainer.innerHTML = '<p class="text-red-400 text-sm">Please enter a CVR between 0 and 100.</p>'; return;
+            }
+            if (!budgetScenariosStr.trim()) {
+                bsResultsContainer.innerHTML = '<p class="text-red-400 text-sm">Please enter at least one budget scenario.</p>'; return;
+            }
+            const budgetScenarios = budgetScenariosStr.split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n) && n > 0);
+            if (budgetScenarios.length === 0) {
+                bsResultsContainer.innerHTML = '<p class="text-red-400 text-sm">Please enter valid, positive budget scenario numbers.</p>'; return;
+            }
+            const cvrDecimal = cvrPercentage / 100.0;
+
+            bsResultsContainer.innerHTML = '<p class="text-gray-400 text-sm">Simulating, please wait...</p>';
+            fetch("{{ url_for('optimization.budget_simulator_api') }}", {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    current_cpc: cpc, current_cvr_clicks: cvrDecimal, budget_scenarios: budgetScenarios
+                })
+            })
+            .then(response => response.ok ? response.json() : response.json().then(err => Promise.reject(err)))
+            .then(data => {
+                let htmlResult = '';
+                if (data.assumptions) {
+                    htmlResult += `<p class="text-xs text-gray-500 mb-3"><em>Note: ${data.assumptions}</em></p>`;
+                }
+                if (data.scenarios && data.scenarios.length > 0) {
+                    htmlResult += '<div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-700 text-xs sm:text-sm">';
+                    htmlResult += `<thead class="bg-gray-750 text-gray-300 uppercase tracking-wider"><tr class="text-right"><th class="px-3 py-2 font-semibold">Budget ($)</th><th class="px-3 py-2 font-semibold">Projected Spend ($)</th><th class="px-3 py-2 font-semibold">Projected Clicks</th><th class="px-3 py-2 font-semibold">Projected Conversions</th><th class="px-3 py-2 font-semibold">Projected CPA ($)</th></tr></thead>`;
+                    htmlResult += '<tbody class="bg-gray-800 divide-y divide-gray-700">';
+                    data.scenarios.forEach(s => {
+                        htmlResult += `<tr class="hover:bg-gray-750"><td class="px-3 py-2 text-right font-semibold text-white">${s.budget.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                                         <td class="px-3 py-2 text-right">${s.projected_spend.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                                         <td class="px-3 py-2 text-right">${Math.round(s.projected_clicks).toLocaleString()}</td>
+                                         <td class="px-3 py-2 text-right">${s.projected_conversions.toLocaleString(undefined, {minimumFractionDigits:1, maximumFractionDigits:2})}</td>
+                                         <td class="px-3 py-2 text-right">${s.projected_cpa.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</td></tr>`;
+                    });
+                    htmlResult += '</tbody></table></div>';
+                } else {
+                    htmlResult += '<p class="text-yellow-400 text-sm">No simulation results returned.</p>';
+                }
+                bsResultsContainer.innerHTML = htmlResult;
+            })
+            .catch(error => {
+                console.error("Error with Budget Simulator:", error);
+                bsResultsContainer.innerHTML = `<p class="text-red-400 text-sm">Error: ${error.error || error.message || 'Unknown error'}</p>`;
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,560 @@
+{% extends "base.html" %}
+
+{% block title %}AI Insight Engine - AdInsights{% endblock %}
+
+{% block head_extra %}
+{# Add Chart.js if not already in base.html or if base.html's version is older #}
+{# <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> #}
+{# Assuming Chart.js is loaded via base.html or another global mechanism now #}
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto mt-6 sm:mt-10 p-4">
+    <h1 class="text-3xl sm:text-4xl font-bold text-white mb-6 sm:mb-8 text-center sm:text-left">AI Insight Engine</h1>
+
+    <!-- Spend Anomalies Section -->
+    <div class="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-xl mb-6 sm:mb-8">
+        <h2 class="text-xl sm:text-2xl font-semibold text-white mb-4">Spend Anomaly Detection</h2>
+        <p class="text-sm text-gray-400 mb-3">Identifies campaigns with unusual spend yesterday compared to the prior 29 days.</p>
+        <div id="spend-anomalies-container" class="text-gray-300">
+            <p class="text-gray-400 text-sm">Loading spend anomalies...</p>
+        </div>
+    </div>
+
+    <!-- Top Movers Section -->
+    <div class="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-xl mb-6 sm:mb-8">
+        <h2 class="text-xl sm:text-2xl font-semibold text-white mb-4">Top Campaign Movers</h2>
+        <p class="text-sm text-gray-400 mb-3">Discover campaigns with the most significant changes in key metrics week-over-week or day-over-day.</p>
+        <div class="flex flex-wrap gap-3 mb-4 items-end">
+            <div>
+                <label for="top-movers-metric" class="block text-xs sm:text-sm font-medium text-gray-400">Select Metric:</label>
+                <select id="top-movers-metric" class="form-input mt-1 block w-full p-2 bg-gray-700 text-white border-gray-600 rounded-md shadow-sm text-xs sm:text-sm">
+                    <option value="spend">Total Spend</option>
+                    <option value="conversions">Total Conversions</option>
+                    <option value="clicks">Total Clicks</option>
+                    <option value="impressions">Total Impressions</option>
+                    <option value="cpa">Cost Per Acquisition (CPA)</option>
+                    <option value="cvr_clicks">Conversion Rate (from Clicks)</option>
+                    <option value="ctr">Click-Through Rate (CTR)</option>
+                </select>
+            </div>
+            <div>
+                <label for="top-movers-period" class="block text-xs sm:text-sm font-medium text-gray-400">Comparison Period:</label>
+                <select id="top-movers-period" class="form-input mt-1 block w-full p-2 bg-gray-700 text-white border-gray-600 rounded-md shadow-sm text-xs sm:text-sm">
+                    <option value="wow">Week-over-Week</option>
+                    <option value="dod">Day-over-Day</option>
+                </select>
+            </div>
+            <button id="fetch-top-movers-btn" class="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-sm text-xs sm:text-sm h-fit font-medium">Find Top Movers</button>
+        </div>
+        <div id="top-movers-container" class="text-gray-300">
+            <p class="text-gray-400 text-sm">Select a metric and comparison period to view top campaign movers.</p>
+        </div>
+    </div>
+
+    <!-- Campaign Performance Scorecard Section -->
+    <div class="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-xl mb-6 sm:mb-8">
+        <h2 class="text-xl sm:text-2xl font-semibold text-white mb-4">Campaign Health Scorecard</h2>
+        <p class="text-sm text-gray-400 mb-3">Get a health check for a specific campaign by comparing its recent performance (last 14 days) against a baseline (previous 30 days).</p>
+        <div class="flex flex-wrap gap-3 mb-4 items-end">
+            <div>
+                <label for="scorecard-campaign-select" class="block text-xs sm:text-sm font-medium text-gray-400">Select Campaign:</label>
+                <select id="scorecard-campaign-select" class="form-input mt-1 block w-full p-2 bg-gray-700 text-white border-gray-600 rounded-md shadow-sm text-xs sm:text-sm min-w-[200px] sm:min-w-[250px]">
+                    <option value="">Select a Campaign...</option>
+                </select>
+            </div>
+            <button id="fetch-scorecard-btn" class="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-sm text-xs sm:text-sm h-fit font-medium">Generate Scorecard</button>
+        </div>
+        <div id="campaign-scorecard-container" class="text-gray-300">
+            <p class="text-gray-400 text-sm">Select a campaign to view its performance scorecard.</p>
+        </div>
+    </div>
+
+    <!-- Metric Trend Analysis Section -->
+    <div class="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-xl mb-6 sm:mb-8">
+        <h2 class="text-xl sm:text-2xl font-semibold text-white mb-4">Performance Metric Trend Analysis</h2>
+        <p class="text-sm text-gray-400 mb-3">Analyze historical trends for key metrics over selected periods for all campaigns or a specific one.</p>
+        <div class="flex flex-wrap gap-3 mb-4 items-end">
+            <div>
+                <label for="trend-metric-select" class="block text-xs sm:text-sm font-medium text-gray-400">Select Metric:</label>
+                <select id="trend-metric-select" class="form-input mt-1 block p-2 bg-gray-700 text-white border-gray-600 rounded-md shadow-sm text-xs sm:text-sm">
+                    <option value="spend">Total Spend</option>
+                    <option value="clicks">Total Clicks</option>
+                    <option value="impressions">Total Impressions</option>
+                    <option value="conversions">Total Conversions</option>
+                    <option value="ctr">CTR (%)</option>
+                    <option value="cpc">CPC</option>
+                    <option value="cvr_clicks">CVR (from Clicks) (%)</option>
+                    <option value="cpa">CPA</option>
+                </select>
+            </div>
+            <div>
+                <label for="trend-period-select" class="block text-xs sm:text-sm font-medium text-gray-400">Select Period:</label>
+                <select id="trend-period-select" class="form-input mt-1 block p-2 bg-gray-700 text-white border-gray-600 rounded-md shadow-sm text-xs sm:text-sm">
+                    <option value="30" selected>Last 30 Days</option>
+                    <option value="60">Last 60 Days</option>
+                    <option value="90">Last 90 Days</option>
+                </select>
+            </div>
+            <div>
+                <label for="trend-campaign-select" class="block text-xs sm:text-sm font-medium text-gray-400">Filter Campaign (Optional):</label>
+                <select id="trend-campaign-select" class="form-input mt-1 block p-2 bg-gray-700 text-white border-gray-600 rounded-md shadow-sm text-xs sm:text-sm min-w-[200px] sm:min-w-[250px]">
+                    <option value="">All Connected Campaigns</option>
+                </select>
+            </div>
+            <button id="fetch-metric-trend-btn" class="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-sm text-xs sm:text-sm h-fit font-medium">Analyze Trend</button>
+        </div>
+        <div id="metric-trend-summary" class="text-gray-300 my-2 text-sm sm:text-base">Select parameters and click "Analyze Trend" to view results.</div>
+        <div id="metric-trend-chart-container" class="min-h-[300px] sm:min-h-[350px] bg-gray-750 p-2 rounded-md">
+            <canvas id="metric-trend-chart"></canvas>
+        </div>
+    </div>
+
+    <!-- Basic Metric Forecast Section -->
+    <div class="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-xl mb-6 sm:mb-8">
+        <h2 class="text-xl sm:text-2xl font-semibold text-white mb-4">Simple Metric Forecast</h2>
+        <p class="text-sm text-gray-400 mb-3">Generate a basic forecast by averaging historical data and projecting it forward.</p>
+        <div class="flex flex-wrap gap-3 mb-4 items-end">
+            <div>
+                <label for="forecast-metric-select" class="block text-xs sm:text-sm font-medium text-gray-400">Select Metric:</label>
+                <select id="forecast-metric-select" class="form-input mt-1 block p-2 bg-gray-700 text-white border-gray-600 rounded-md shadow-sm text-xs sm:text-sm">
+                    <option value="spend">Total Spend</option>
+                    <option value="clicks">Total Clicks</option>
+                    <option value="impressions">Total Impressions</option>
+                    <option value="conversions">Total Conversions</option>
+                </select>
+            </div>
+            <div>
+                <label for="forecast-history-days-select" class="block text-xs sm:text-sm font-medium text-gray-400">Base on Historical Data from:</label>
+                <select id="forecast-history-days-select" class="form-input mt-1 block p-2 bg-gray-700 text-white border-gray-600 rounded-md shadow-sm text-xs sm:text-sm">
+                    <option value="7">Past 7 Days</option>
+                    <option value="14" selected>Past 14 Days</option>
+                    <option value="30">Past 30 Days</option>
+                </select>
+            </div>
+            <div>
+                <label for="forecast-projection-days-select" class="block text-xs sm:text-sm font-medium text-gray-400">Project for:</label>
+                <select id="forecast-projection-days-select" class="form-input mt-1 block p-2 bg-gray-700 text-white border-gray-600 rounded-md shadow-sm text-xs sm:text-sm">
+                    <option value="7" selected>Next 7 Days</option>
+                    <option value="14">Next 14 Days</option>
+                    <option value="30">Next 30 Days</option>
+                </select>
+            </div>
+            <div>
+                <label for="forecast-campaign-select" class="block text-xs sm:text-sm font-medium text-gray-400">Filter Campaign (Optional):</label>
+                <select id="forecast-campaign-select" class="form-input mt-1 block p-2 bg-gray-700 text-white border-gray-600 rounded-md shadow-sm text-xs sm:text-sm min-w-[200px] sm:min-w-[250px]">
+                    <option value="">All Connected Campaigns</option>
+                </select>
+            </div>
+            <button id="fetch-simple-forecast-btn" class="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-sm text-xs sm:text-sm h-fit font-medium">Generate Forecast</button>
+        </div>
+        <div id="simple-forecast-summary" class="text-gray-300 my-2 text-sm sm:text-base">Select parameters and click "Generate Forecast" to see projections.</div>
+        <div id="simple-forecast-chart-container" class="min-h-[300px] sm:min-h-[350px] bg-gray-750 p-2 rounded-md">
+            <canvas id="simple-forecast-chart"></canvas>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() if super }} {# Include scripts from base.html if any #}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Helper for icons
+    const upArrowSvg = `<svg class="inline-block w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg>`;
+    const downArrowSvg = `<svg class="inline-block w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V5a1 1 0 012 0v7.586l2.293-2.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>`;
+    const neutralIconSvg = `<svg class="inline-block w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12zm-1-5a1 1 0 100 2h2a1 1 0 100-2H9z" clip-rule="evenodd"></path></svg>`;
+    const warningIconSvg = `<svg class="inline-block w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM10 13a1 1 0 11-2 0 1 1 0 012 0zm-1-3a1 1 0 00-1 1v3a1 1 0 102 0V9a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>`;
+    const checkIconSvg = `<svg class="inline-block w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>`;
+
+
+    // --- Spend Anomalies ---
+    const spendAnomaliesContainer = document.getElementById('spend-anomalies-container');
+    function displaySpendAnomalies(data) {
+        if (!spendAnomaliesContainer) return;
+        if (!data || data.length === 0) {
+            spendAnomaliesContainer.innerHTML = '<p class="text-gray-400 text-sm">No significant spend anomalies detected for yesterday.</p>';
+            return;
+        }
+        // Refined table headers for clarity
+        let html = '<div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-700 text-xs sm:text-sm">';
+        html += '<thead class="bg-gray-750 text-gray-300 uppercase tracking-wider"><tr class="text-left"><th class="px-3 py-2 font-semibold">Campaign</th><th class="px-3 py-2 font-semibold">Platform</th><th class="px-3 py-2 font-semibold">Anomaly Date</th><th class="px-3 py-2 font-semibold text-right">Anomalous Spend</th><th class="px-3 py-2 font-semibold text-right">Avg. Baseline Spend</th><th class="px-3 py-2 font-semibold">Deviation</th><th class="px-3 py-2 font-semibold">Observation</th></tr></thead>';
+        html += '<tbody class="bg-gray-800 divide-y divide-gray-700">';
+        data.forEach(item => {
+            let directionColor = 'text-gray-400';
+            let icon = neutralIconSvg;
+            if (item.direction === 'high') { directionColor = 'text-red-400'; icon = upArrowSvg; }
+            else if (item.direction === 'low') { directionColor = 'text-green-400'; icon = downArrowSvg; }
+            html += `<tr class="hover:bg-gray-750"><td class="px-3 py-2 whitespace-nowrap font-medium">${item.campaign_name}</td>
+                        <td class="px-3 py-2 whitespace-nowrap">${item.platform}</td>
+                        <td class="px-3 py-2 whitespace-nowrap">${item.anomaly_date}</td>
+                        <td class="px-3 py-2 text-right whitespace-nowrap">$${item.value.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                        <td class="px-3 py-2 text-right whitespace-nowrap">$${item.mean.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                        <td class="px-3 py-2 whitespace-nowrap ${directionColor} flex items-center gap-1">${icon} ${item.direction}</td>
+                        <td class="px-3 py-2">${item.message}</td></tr>`;
+        });
+        html += '</tbody></table></div>';
+        spendAnomaliesContainer.innerHTML = html;
+    }
+    fetch("{{ url_for('ai_insights.get_spend_anomalies') }}")
+        .then(response => response.ok ? response.json() : response.json().then(err => Promise.reject(err)))
+        .then(data => displaySpendAnomalies(data))
+        .catch(error => {
+            console.error("Error fetching spend anomalies:", error);
+            if(spendAnomaliesContainer) spendAnomaliesContainer.innerHTML = `<p class="text-red-400 text-sm">Could not load spend anomalies: ${error.error || error.message || 'Unknown error'}</p>`;
+        });
+
+    // --- Top Movers ---
+    const topMoversContainer = document.getElementById('top-movers-container');
+    const fetchTopMoversBtn = document.getElementById('fetch-top-movers-btn');
+    const topMoversMetricSelect = document.getElementById('top-movers-metric');
+    const topMoversPeriodSelect = document.getElementById('top-movers-period');
+
+    function displayTopMovers(data) {
+        if (!topMoversContainer) return;
+        let html = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">`;
+        const buildTable = (title, items, colorClass) => {
+            let tableHtml = `<div><h3 class="text-lg sm:text-xl font-semibold ${colorClass} mb-2">${title}</h3>`;
+            if (items && items.length > 0) {
+                // Refined table headers for Top Movers
+                tableHtml += '<div class="overflow-x-auto bg-gray-750 rounded-md shadow"><table class="min-w-full divide-y divide-gray-600 text-xs sm:text-sm"><thead><tr class="text-gray-300"><th class="px-2 py-2 text-left font-semibold">Campaign (Platform)</th><th class="px-2 py-2 text-right font-semibold">Absolute Change</th><th class="px-2 py-2 text-right font-semibold">Percentage Change (%)</th><th class="px-2 py-2 text-right font-semibold">Current Value</th></tr></thead><tbody class="divide-y divide-gray-600">';
+                tableHtml += '<div class="overflow-x-auto bg-gray-750 rounded-md shadow"><table class="min-w-full divide-y divide-gray-600 text-xs sm:text-sm"><thead><tr class="text-gray-300"><th class="px-2 py-2 text-left font-semibold">Campaign (Platform)</th><th class="px-2 py-2 text-right font-semibold">Absolute Change</th><th class="px-2 py-2 text-right font-semibold">Percentage Change (%)</th><th class="px-2 py-2 text-right font-semibold">Current Value</th></tr></thead><tbody class="divide-y divide-gray-600">';
+                items.forEach(item => {
+                    let absChangeDisplay = item.absolute_change.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+                    if (data.metric === 'ctr' || data.metric === 'cvr_clicks') { // For percentage metrics, show absolute change in % points
+                        absChangeDisplay = `${item.absolute_change.toFixed(2)} pp`; // percentage points
+                    } else if (data.metric !== 'spend' && data.metric !== 'cpa' && data.metric !== 'cpc') { // Non-currency whole numbers
+                        absChangeDisplay = item.absolute_change.toLocaleString(undefined, {minimumFractionDigits:0, maximumFractionDigits:0});
+                    }
+
+                    let currentValueDisplay = item.current_value.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+                     if (data.metric === 'ctr' || data.metric === 'cvr_clicks') {
+                        currentValueDisplay = `${item.current_value.toFixed(2)}%`;
+                    } else if (data.metric !== 'spend' && data.metric !== 'cpa' && data.metric !== 'cpc') {
+                        currentValueDisplay = item.current_value.toLocaleString(undefined, {minimumFractionDigits:0, maximumFractionDigits:0});
+                    }
+
+
+                    tableHtml += `<tr class="hover:bg-gray-700"><td class="px-2 py-1.5 whitespace-nowrap font-medium">${item.campaign_name} (${item.platform})</td>
+                                 <td class="px-2 py-1.5 text-right ${colorClass} whitespace-nowrap">${absChangeDisplay}</td>
+                                 <td class="px-2 py-1.5 text-right ${colorClass} whitespace-nowrap">(${item.percentage_change.toFixed(1)}%)</td>
+                                 <td class="px-2 py-1.5 text-right whitespace-nowrap">${currentValueDisplay}</td></tr>`;
+                });
+                tableHtml += '</tbody></table></div>';
+            } else { tableHtml += `<p class="text-gray-400 text-sm">No significant ${title.toLowerCase().replace('top ','')} found for selected metric and period.</p>`; }
+            tableHtml += '</div>';
+            return tableHtml;
+        };
+        html += buildTable('Top Gainers', data.gainers, 'text-green-400');
+        html += buildTable('Top Decliners', data.decliners, 'text-red-400');
+        html += '</div>';
+        topMoversContainer.innerHTML = html;
+    }
+    if (fetchTopMoversBtn) {
+        fetchTopMoversBtn.addEventListener('click', function() {
+            const metric = topMoversMetricSelect.value;
+            const period = topMoversPeriodSelect.value;
+            if(topMoversContainer) topMoversContainer.innerHTML = '<p class="text-gray-400 text-sm">Loading top movers...</p>';
+            fetch(`/ai-insights/api/top_movers?metric=${metric}&period=${period}`)
+                .then(response => response.ok ? response.json() : response.json().then(err => Promise.reject(err)))
+                .then(data => displayTopMovers(data))
+                .catch(error => {
+                    console.error("Error fetching top movers:", error);
+                    if(topMoversContainer) topMoversContainer.innerHTML = `<p class="text-red-400 text-sm">Could not load top movers: ${error.error || error.message || 'Unknown error'}</p>`;
+                });
+        });
+    }
+
+    // --- Campaign Scorecard ---
+    const scorecardCampaignSelect = document.getElementById('scorecard-campaign-select');
+    const fetchScorecardBtn = document.getElementById('fetch-scorecard-btn');
+    const scorecardContainer = document.getElementById('campaign-scorecard-container');
+    let campaignListDataStore = [];
+
+    function populateCampaignDropdownGeneric(selectElement, campaigns) {
+        if (!selectElement) return;
+        const currentValue = selectElement.value; // Preserve current selection if possible
+        // Clear existing options except the first one (placeholder like "Select..." or "All Campaigns")
+        const firstOption = selectElement.options[0];
+        selectElement.innerHTML = ''; // Clear all
+        if(firstOption) selectElement.appendChild(firstOption); // Add back placeholder
+
+        campaigns.forEach(campaign => {
+            const option = document.createElement('option');
+            option.value = `${campaign.platform}:${campaign.id}`;
+            option.textContent = `${campaign.name} (${campaign.platform})`;
+            selectElement.appendChild(option);
+        });
+        if (currentValue) selectElement.value = currentValue; // Restore selection if it still exists
+    }
+
+    fetch("{{ url_for('ai_insights.get_user_campaign_list') }}")
+        .then(response => response.ok ? response.json() : response.json().then(err => Promise.reject(err)))
+        .then(data => {
+            campaignListDataStore = data;
+            populateCampaignDropdownGeneric(scorecardCampaignSelect, campaignListDataStore);
+            populateCampaignDropdownGeneric(document.getElementById('trend-campaign-select'), campaignListDataStore);
+            populateCampaignDropdownGeneric(document.getElementById('forecast-campaign-select'), campaignListDataStore);
+        })
+        .catch(error => console.error("Error fetching campaign list for dropdowns:", error.error || error.message || 'Unknown error'));
+
+    function formatMetricsTableForScorecard(metrics, title) {
+        let tableHtml = `<h4 class="text-md sm:text-lg font-semibold text-gray-300 mb-2">${title}</h4>`;
+        tableHtml += '<div class="overflow-x-auto bg-gray-750 rounded-md shadow-inner"><table class="min-w-full divide-y divide-gray-600 text-xs sm:text-sm">';
+        tableHtml += '<tbody class="divide-y divide-gray-600">';
+        const metricsToDisplay = ['spend', 'clicks', 'impressions', 'conversions', 'ctr', 'cpc', 'cvr_clicks', 'cpa'];
+        metricsToDisplay.forEach(key => {
+            const value = metrics[key];
+            let formattedValue = 'N/A';
+            if (typeof value === 'number') {
+                if (['ctr', 'cvr_clicks'].includes(key)) {
+                    formattedValue = `${value.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}%`;
+                } else if (['cpc', 'cpa', 'spend'].includes(key)) {
+                    formattedValue = `$${value.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+                } else {
+                     formattedValue = value.toLocaleString();
+                }
+            } else if (value !== undefined && value !== null) {
+                formattedValue = value;
+            }
+            tableHtml += `<tr class="hover:bg-gray-700"><td class="px-3 py-1.5 font-medium text-gray-400 whitespace-nowrap">${key.toUpperCase().replace('_',' ')}</td><td class="px-3 py-1.5 text-gray-200 whitespace-nowrap text-right">${formattedValue}</td></tr>`;
+        });
+        tableHtml += '</tbody></table></div>';
+        return tableHtml;
+    }
+
+    function displayScorecard(data) {
+        if (!scorecardContainer || !data || !data.recent_period_summary) {
+            if(scorecardContainer) scorecardContainer.innerHTML = '<p class="text-red-400 text-sm">Scorecard data is incomplete or missing.</p>';
+            return;
+        }
+        let html = `<div class="bg-gray-750 p-3 sm:p-4 rounded-lg shadow-inner">`;
+        html += `<h3 class="text-lg sm:text-xl font-bold text-white mb-3">${data.campaign_name} (${data.platform}) - Scorecard</h3>`;
+        html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">`;
+        html += formatMetricsTableForScorecard(data.recent_period_summary, `Recent (${data.recent_period_summary.start_date} to ${data.recent_period_summary.end_date})`);
+        html += formatMetricsTableForScorecard(data.baseline_period_summary, `Baseline (${data.baseline_period_summary.start_date} to ${data.baseline_period_summary.end_date})`);
+        html += `</div>`;
+        html += `<h4 class="text-md sm:text-lg font-semibold text-gray-300 mt-3 sm:mt-4 mb-2">Key Observations:</h4>`;
+        if (data.observations && data.observations.length > 0) {
+            html += '<ul class="list-none space-y-2">';
+            data.observations.forEach(obs => {
+                let statusColor = 'text-gray-300'; let icon = neutralIconSvg;
+                if (obs.status === 'positive') { statusColor = 'text-green-400'; icon = checkIconSvg; }
+                else if (obs.status === 'warning') { statusColor = 'text-yellow-400'; icon = warningIconSvg; }
+                else if (obs.status === 'critical') { statusColor = 'text-red-500'; icon = warningIconSvg; }
+                html += `<li class="p-2 sm:p-3 bg-gray-700 rounded-md shadow-sm flex items-start gap-2 text-xs sm:text-sm"><span class="${statusColor} flex-shrink-0">${icon}</span><span class="flex-1"><strong class="font-medium">${obs.metric}:</strong> ${obs.message}</span></li>`;
+            });
+            html += '</ul>';
+        } else { html += '<p class="text-gray-400 text-sm">No specific observations to report.</p>'; }
+        html += `</div>`;
+        scorecardContainer.innerHTML = html;
+    }
+    if (fetchScorecardBtn) {
+        fetchScorecardBtn.addEventListener('click', function() {
+            const selectedValue = scorecardCampaignSelect.value;
+            if (!selectedValue) {
+                if(scorecardContainer) scorecardContainer.innerHTML = '<p class="text-yellow-400 text-sm">Please select a campaign first.</p>';
+                return;
+            }
+            const [platform, campaignId] = selectedValue.split(':');
+            if(scorecardContainer) scorecardContainer.innerHTML = '<p class="text-gray-400 text-sm">Loading scorecard...</p>';
+            fetch(`/ai-insights/api/campaign_scorecard?platform=${platform}&campaign_id_platform=${campaignId}`)
+                .then(response => response.ok ? response.json() : response.json().then(err => Promise.reject(err)))
+                .then(data => displayScorecard(data))
+                .catch(error => {
+                    console.error("Error fetching campaign scorecard:", error);
+                    if(scorecardContainer) scorecardContainer.innerHTML = `<p class="text-red-400 text-sm">Could not load scorecard: ${error.error || error.message || 'Unknown error'}</p>`;
+                });
+        });
+    }
+
+    // --- Metric Trend Analysis ---
+    const trendMetricSelect = document.getElementById('trend-metric-select');
+    const trendPeriodSelect = document.getElementById('trend-period-select');
+    const trendCampaignSelectJs = document.getElementById('trend-campaign-select');
+    const fetchTrendBtn = document.getElementById('fetch-metric-trend-btn');
+    const trendChartCanvas = document.getElementById('metric-trend-chart');
+    const trendSummaryEl = document.getElementById('metric-trend-summary');
+    let trendChartInstance;
+
+    function getTrendColor(trendDirection) {
+        if (trendDirection === 'upward') return 'text-green-400';
+        if (trendDirection === 'downward') return 'text-red-400';
+        return 'text-gray-400';
+    }
+    function renderTrendChart(apiData) {
+        if (!trendChartCanvas) return;
+        const ctx = trendChartCanvas.getContext('2d');
+        if (trendChartInstance) trendChartInstance.destroy();
+
+        const labels = apiData.trend_data.map(d => d.date);
+        const values = apiData.trend_data.map(d => d.value);
+
+        const datasets = [{
+            label: `${apiData.metric.replace(/_/g, ' ').replace(/\w/g, l => l.toUpperCase())} Trend for ${apiData.campaign_name} (${apiData.platform})`,
+            data: values,
+            borderColor: '#3B82F6', backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            fill: true, tension: 0.2, pointRadius: 2, pointBackgroundColor: '#3B82F6'
+        }];
+
+        if (apiData.trend_line && apiData.trend_line.length === 2 && apiData.trend_data.length > 1 && typeof apiData.slope === 'number') {
+             const x_coords_trend = labels.map((_, index) => index);
+             // Assuming trend_line[0].value is the intercept IF the first data point is x=0 for the trend line.
+             // A more robust intercept for charting: intercept = trend_line_start_value - slope * x_start_coord
+             // Here, the API sends trend_line[0].value as the y-value for the first date in trend_data
+             // and trend_line[1].value as y-value for the last date in trend_data.
+             // So we can just plot these two points for the line.
+             // Create a dataset that only has points at the start and end of the labels list.
+             const trendLineValues = new Array(labels.length).fill(null);
+             if (labels.length > 0) {
+                trendLineValues[0] = apiData.trend_line[0].value;
+                if (labels.length > 1) {
+                    trendLineValues[labels.length - 1] = apiData.trend_line[1].value;
+                }
+             }
+            datasets.push({
+                label: 'Trend Line', data: trendLineValues,
+                borderColor: '#EF4444', borderDash: [5, 5], fill: false, tension: 0.2, pointRadius: 0,
+                spanGaps: true // Connect points with nulls in between
+            });
+        }
+
+        trendChartInstance = new Chart(ctx, {
+            type: 'line', data: { labels: labels, datasets: datasets },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: false, ticks: {color: '#9cb2ba', font:{size:10}}, grid: {color: '#3b4e54'} },
+                    x: { ticks: {color: '#9cb2ba', font:{size:10}}, grid: {color: '#283539'} }
+                },
+                plugins: { legend: { labels: { color: '#9cb2ba', font:{size:12}} }, tooltip: {mode: 'index', intersect: false}}
+            }
+        });
+    }
+    if (fetchTrendBtn) {
+        fetchTrendBtn.addEventListener('click', function() {
+            const metric = trendMetricSelect.value;
+            const period = trendPeriodSelect.value;
+            const selectedCampaignValue = trendCampaignSelectJs.value;
+            let apiUrl = `/ai-insights/api/metric_trends?metric=${metric}&period_days=${period}`;
+            if (selectedCampaignValue) {
+                const [platform, campaignId] = selectedCampaignValue.split(':');
+                apiUrl += `&platform=${platform}&campaign_id_platform=${campaignId}`;
+            }
+            if(trendSummaryEl) trendSummaryEl.innerHTML = '<p class="text-gray-400 text-sm">Loading trend data...</p>';
+            if (trendChartInstance) trendChartInstance.destroy();
+            fetch(apiUrl)
+                .then(response => response.ok ? response.json() : response.json().then(err => Promise.reject(err)))
+                .then(data => {
+                    if (data.trend_direction === 'nodata' || data.trend_direction === 'insufficient_data' || data.trend_data.length === 0) {
+                        if(trendSummaryEl) trendSummaryEl.innerHTML = `<p class="text-yellow-400 text-sm">${data.message || 'No data available.'}</p>`;
+                        return;
+                    }
+                    renderTrendChart(data);
+                    if(trendSummaryEl) trendSummaryEl.innerHTML = `<p class="text-md sm:text-lg ${getTrendColor(data.trend_direction)}">${data.message}</p>`;
+                })
+                .catch(error => {
+                    console.error("Error fetching metric trend:", error);
+                    if(trendSummaryEl) trendSummaryEl.innerHTML = `<p class="text-red-400 text-sm">Could not load trend: ${error.error || error.message || 'Unknown error'}</p>`;
+                });
+        });
+    }
+
+    // --- Basic Metric Forecast ---
+    const forecastMetricSelect = document.getElementById('forecast-metric-select');
+    const forecastHistoryDaysSelect = document.getElementById('forecast-history-days-select');
+    const forecastProjectionDaysSelect = document.getElementById('forecast-projection-days-select');
+    const forecastCampaignSelectJs = document.getElementById('forecast-campaign-select');
+    const fetchForecastBtn = document.getElementById('fetch-simple-forecast-btn');
+    const forecastChartCanvas = document.getElementById('simple-forecast-chart');
+    const forecastSummaryEl = document.getElementById('simple-forecast-summary');
+    let forecastChartInstance;
+
+    function renderForecastChart(apiData) {
+        if (!forecastChartCanvas) return;
+        const ctx = forecastChartCanvas.getContext('2d');
+        if (forecastChartInstance) forecastChartInstance.destroy();
+
+        const historicalLabels = apiData.historical_data.map(d => d.date);
+        const historicalValues = apiData.historical_data.map(d => d.value);
+        const forecastLabels = apiData.forecast_data.map(d => d.date);
+        const forecastValues = apiData.forecast_data.map(d => d.projected_value);
+        const allLabels = [...new Set([...historicalLabels, ...forecastLabels])].sort(); // Unique sorted labels
+
+        // Map historical and forecast data to the combined labels array
+        const historicalDataMapped = allLabels.map(label => {
+            const entry = apiData.historical_data.find(d => d.date === label);
+            return entry ? entry.value : null;
+        });
+        const forecastDataMapped = allLabels.map(label => {
+            const entry = apiData.forecast_data.find(d => d.date === label);
+            return entry ? entry.projected_value : null;
+        });
+
+
+        forecastChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: allLabels,
+                datasets: [
+                    {
+                        label: `Historical ${apiData.metric.replace(/_/g, ' ').replace(/\w/g, l => l.toUpperCase())}`, data: historicalDataMapped,
+                        borderColor: '#3B82F6', backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: false, tension: 0.2, pointRadius: 2, pointBackgroundColor: '#3B82F6',
+                        spanGaps: false // Do not connect gaps in historical data
+                    },
+                    {
+                        label: `Forecasted ${apiData.metric.replace(/_/g, ' ').replace(/\w/g, l => l.toUpperCase())}`,
+                        data: forecastDataMapped,
+                        borderColor: '#10B981', borderDash: [5, 5], backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: false, tension: 0.2, pointRadius: 2, pointBackgroundColor: '#10B981',
+                        spanGaps: false // Do not connect gaps if any in forecast (should not be)
+                    }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: false, ticks: {color: '#9cb2ba', font:{size:10}}, grid: {color: '#3b4e54'} },
+                    x: { ticks: {color: '#9cb2ba', font:{size:10}}, grid: {color: '#283539'} }
+                },
+                plugins: { legend: { labels: { color: '#9cb2ba', font:{size:12}} }, tooltip: {mode: 'index', intersect: false}}
+            }
+        });
+    }
+    if (fetchForecastBtn) {
+        fetchForecastBtn.addEventListener('click', function() {
+            const metric = forecastMetricSelect.value;
+            const history_days = forecastHistoryDaysSelect.value;
+            const projection_days = forecastProjectionDaysSelect.value;
+            const selectedCampaignValue = forecastCampaignSelectJs.value;
+            let apiUrl = `/ai-insights/api/simple_forecast?metric=${metric}&history_days=${history_days}&projection_days=${projection_days}`;
+            if (selectedCampaignValue) {
+                const [platform, campaignId] = selectedCampaignValue.split(':');
+                apiUrl += `&platform=${platform}&campaign_id_platform=${campaignId}`;
+            }
+            if(forecastSummaryEl) forecastSummaryEl.innerHTML = '<p class="text-gray-400 text-sm">Loading forecast data...</p>';
+            if (forecastChartInstance) forecastChartInstance.destroy();
+            fetch(apiUrl)
+                .then(response => response.ok ? response.json() : response.json().then(err => Promise.reject(err)))
+                .then(data => {
+                    if (data.message && (data.historical_data.length === 0 && data.forecast_data.length === 0)) {
+                         if(forecastSummaryEl) forecastSummaryEl.innerHTML = `<p class="text-yellow-400 text-sm">${data.message}</p>`;
+                        return;
+                    }
+                    renderForecastChart(data);
+                    if(forecastSummaryEl) forecastSummaryEl.innerHTML = `<p class="text-gray-300 text-sm">${data.message} Avg. Daily Value Used: <strong class="text-white">${data.average_daily_value_used.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</strong></p>`;
+                })
+                .catch(error => {
+                    console.error("Error fetching simple forecast:", error);
+                    if(forecastSummaryEl) forecastSummaryEl.innerHTML = `<p class="text-red-400 text-sm">Could not load forecast: ${error.error || error.message || 'Unknown error'}</p>`;
+                });
+        });
+    }
+
+    // Default initial loads if any section should load by default
+    // Example: fetchTopMoversBtn?.click(); // Load Top Movers for default selections
+});
+</script>
+{% endblock %}

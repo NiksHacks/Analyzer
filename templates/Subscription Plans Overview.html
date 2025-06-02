@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Subscription Plans - AdInsights{% endblock %}
+
+{% block content %}
+{# Removed outer div with bg-[#121617] and font-family, assuming base.html handles this #}
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+    <h1 class="text-2xl sm:text-3xl font-bold text-white mb-6 sm:mb-10 text-center">Find the AdInsights Plan That's Right for You</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+      {% for plan in plans %}
+        <div class="relative flex flex-col bg-gray-800 p-6 rounded-lg shadow-xl hover:shadow-2xl transition-shadow duration-300">
+          {# "Most Popular" Badge - absolutely positioned #}
+          {% if plan.name == 'Pro' %}
+            <div class="absolute -top-3 -right-3 transform rotate-3">
+                <span class="bg-indigo-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-lg border-2 border-gray-900">Most Popular</span>
+            </div>
+          {% endif %}
+
+          <div class="flex-grow">
+            <h2 class="text-xl sm:text-2xl font-semibold text-white mb-2">{{ plan.name }} Plan</h2>
+            <p class="flex items-baseline text-white mb-4">
+              {# Ensure price formatting is appropriate, e.g., handling decimals if price can have them #}
+              <span class="text-3xl sm:text-4xl font-bold">${{ "%.2f"|format(plan.price) if plan.price is not none else "N/A" }}</span>
+              <span class="text-base font-medium ml-1">/ month</span>
+            </p>
+
+            <ul class="space-y-2 mb-6 text-sm text-gray-300">
+              {% if plan.features %}
+                {% for feature in plan.features %}
+                  <li class="flex items-center">
+                    <svg class="w-4 h-4 text-green-400 mr-2 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                    <span>{{ feature }}</span>
+                  </li>
+                {% endfor %}
+              {% else %}
+                <li class="flex items-center">
+                    <svg class="w-4 h-4 text-gray-500 mr-2 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12zM9 9a1 1 0 000 2h2a1 1 0 000-2H9z" clip-rule="evenodd"></path></svg>
+                    <span>Core platform features included.</span> {# Slightly more descriptive default #}
+                </li>
+              {% endif %}
+            </ul>
+          </div>
+
+          <div class="mt-auto"> {# Pushes button to the bottom of the card #}
+            {% if plan.name == 'Enterprise' %}
+              <a href="mailto:sales@example.com?subject=Inquiry%20about%20Enterprise%20Plan" class="block w-full text-center p-3 bg-gray-600 hover:bg-gray-500 text-white rounded-md shadow-sm font-medium transition-colors duration-150 text-sm sm:text-base">
+                Contact Sales
+              </a>
+            {% else %}
+              <form action="{{ url_for('billing.create_checkout_session', plan_id=plan.id) }}" method="POST" class="w-full">
+                <button type="submit" class="block w-full p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-sm font-medium transition-colors duration-150 text-sm sm:text-base">
+                  Get Started with {{ plan.name }}
+                </button>
+              </form>
+            {% endif %}
+          </div>
+        </div>
+      {% else %}
+        {# This message is shown if the 'plans' list is empty #}
+        <div class="md:col-span-2 lg:col-span-3 text-center py-12">
+            <h2 class="text-xl font-semibold text-white mb-3">No Subscription Plans Available</h2>
+            <p class="text-gray-400">We are currently updating our subscription plans. Please check back soon or contact support for more information.</p>
+        </div>
+      {% endfor %}
+    </div>
+</div>
+{% endblock %}

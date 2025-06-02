@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Subscription Settings - AdInsights{% endblock %}
+
+{% block content %}
+<div class="container mx-auto mt-6 sm:mt-10 p-4">
+    <h1 class="text-2xl sm:text-3xl font-bold text-white mb-6 sm:mb-8 text-center">Subscription Settings</h1>
+
+    <div class="max-w-2xl mx-auto bg-gray-800 p-6 sm:p-8 rounded-lg shadow-xl">
+        {% if active_sub %}
+            <h2 class="text-xl sm:text-2xl font-semibold text-white mb-4">Your Current Subscription</h2>
+            <div class="space-y-3 text-sm sm:text-base">
+                <div class="flex justify-between">
+                    <span class="text-gray-400 font-medium">Plan:</span>
+                    <span class="text-white font-semibold">{{ active_sub.plan.name }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400 font-medium">Price:</span>
+                    <span class="text-white">${{ "%.2f"|format(active_sub.plan.price) }} / month</span> {# Assuming monthly, adjust if plan has interval #}
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400 font-medium">Status:</span>
+                    <span class="font-semibold
+                        {% if active_sub.status.value == 'active' %}text-green-400
+                        {% elif active_sub.status.value == 'trialing' %}text-blue-400
+                        {% elif active_sub.status.value == 'past_due' %}text-red-400
+                        {% elif active_sub.status.value == 'cancelled' %}text-yellow-400
+                        {% else %}text-gray-300{% endif %}">
+                        {{ active_sub.status.value.replace('_', ' ') | title }}
+                    </span>
+                </div>
+                {% if active_sub.end_date %}
+                <div class="flex justify-between">
+                    <span class="text-gray-400 font-medium">
+                        {% if active_sub.status.value == 'cancelled' %}
+                            Subscription Ended On:
+                        {% elif active_sub.status.value == 'past_due' %}
+                            Subscription Valid Until (Payment Due):
+                        {% elif active_sub.status.value == 'trialing' %}
+                            Trial Ends On:
+                        {% else %}
+                            Renews On:
+                        {% endif %}
+                    </span>
+                    <span class="text-white">{{ active_sub.end_date.strftime('%B %d, %Y') }}</span>
+                </div>
+                {% endif %}
+                <div class="flex justify-between">
+                    <span class="text-gray-400 font-medium">Subscribed On:</span>
+                    <span class="text-white">{{ active_sub.start_date.strftime('%B %d, %Y') }}</span>
+                </div>
+            </div>
+
+            <div class="mt-6 sm:mt-8 text-center">
+                <form action="{{ url_for('billing.create_customer_portal_session') }}" method="POST">
+                    <button type="submit" class="w-full sm:w-auto p-3 px-6 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md shadow-sm font-medium transition-colors duration-150 text-sm sm:text-base">
+                        Manage Subscription & Billing Details
+                    </button>
+                </form>
+                <p class="text-xs text-gray-500 mt-2">You will be redirected to our secure payment partner (Stripe) to manage your payment methods, invoices, and subscription details (like cancelling or changing plans if applicable).</p>
+            </div>
+
+        {% else %}
+            <div class="text-center">
+                <h2 class="text-xl sm:text-2xl font-semibold text-white mb-4">You Have No Active Subscription</h2>
+                <p class="text-gray-300 mb-6">Manage your AdInsights experience by choosing a plan that fits your needs.</p>
+                <a href="{{ url_for('auth.subscription_plans_overview') }}" class="p-3 px-6 bg-green-600 hover:bg-green-700 text-white rounded-md shadow-sm font-medium transition-colors duration-150 text-sm sm:text-base">
+                    Explore Subscription Plans
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

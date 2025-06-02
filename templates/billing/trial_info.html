@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Trial Information - AdInsights{% endblock %}
+
+{% block content %}
+<div class="container mx-auto mt-6 sm:mt-10 p-4">
+    <div class="max-w-3xl mx-auto">
+        <div class="bg-gray-800 p-6 sm:p-8 rounded-lg shadow-xl mb-8">
+            <h1 class="text-2xl sm:text-3xl font-bold text-white mb-3 text-center sm:text-left">Trial Information</h1>
+            {% if current_user.is_authenticated and trial_info %}
+                <p class="text-gray-300 text-sm sm:text-base mb-6 text-center sm:text-left">
+                    You are currently on a trial for the <strong>{{ trial_info.plan_name }}</strong> plan.
+                    {% if trial_info.is_active %}
+                        Your trial ends on <strong>{{ trial_info.end_date.strftime('%B %d, %Y') }}</strong>.
+                        You have <strong>{{ trial_info.remaining_days }}</strong> day{{ 's' if trial_info.remaining_days != 1 else '' }} remaining.
+                    {% else %}
+                        Your trial has ended. We hope you enjoyed the features!
+                    {% endif %}
+                </p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm mb-6 border-t border-gray-700 pt-4">
+                    <div class="text-gray-400 font-medium">Trial Started:</div><div class="text-white">{{ trial_info.start_date.strftime('%B %d, %Y') }}</div>
+                    <div class="text-gray-400 font-medium">Trial Ends:</div><div class="text-white">{{ trial_info.end_date.strftime('%B %d, %Y') }}</div>
+                    <div class="text-gray-400 font-medium">Total Trial Duration:</div><div class="text-white">{{ trial_info.duration_days }} days</div>
+                    <div class="text-gray-400 font-medium">Features In Trial:</div><div class="text-white">{{ trial_info.features_summary | default('Key features of the ' + trial_info.plan_name + ' plan') }}</div>
+                </div>
+                 <p class="text-gray-300 text-sm sm:text-base mb-6 text-center sm:text-left">
+                    To continue enjoying uninterrupted access to all AdInsights features after your trial, please upgrade to a paid subscription.
+                </p>
+            {% else %}
+                <p class="text-gray-300 text-center py-4">No active trial information is currently available for your account.</p>
+            {% endif %}
+        </div>
+
+        {# Upgrade Options - Reuse Subscription Plans Overview structure #}
+        {# For simplicity, this can just link to the plans page, or embed plan display later #}
+        <div class="bg-gray-800 p-6 sm:p-8 rounded-lg shadow-xl mt-8">
+            <h2 class="text-xl sm:text-2xl font-semibold text-white mb-4 text-center">Ready to Continue with AdInsights?</h2>
+            <p class="text-gray-300 text-center mb-6">Choose a subscription plan that best fits your advertising analysis needs.</p>
+            <div class="text-center">
+                <a href="{{ url_for('auth.subscription_plans_overview') }}" class="inline-block p-3 px-6 bg-green-600 hover:bg-green-700 text-white rounded-md shadow-sm font-medium text-sm sm:text-base">
+                    Explore Subscription Plans
+                </a>
+            </div>
+            {# Optionally, if you want to display plans directly here like in the original HTML: #}
+            {# You would need to query 'plans' in the route and loop through them with the same styling as Subscription Plans Overview #}
+        </div>
+    </div>
+</div>
+{% endblock %}

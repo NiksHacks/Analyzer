@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="container mx-auto mt-10">
+    <h2 class="text-2xl font-bold mb-4">Select Meta Ads Account for Integration ID: {{ integration.id }}</h2>
+    {% if accounts %}
+      <form method="POST">
+        <div class="mb-4">
+          <label for="ad_account_id" class="block text-sm font-medium text-gray-300">Choose Ad Account:</label>
+          <select name="ad_account_id" id="ad_account_id" required class="mt-1 block w-full p-2 border border-gray-600 bg-gray-700 text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            {% for acc in accounts %}
+              <option value="{{ acc.id }}" data-name="{{ acc.name }}">{{ acc.name }} (ID: {{ acc.id }})</option>
+            {% endfor %}
+          </select>
+          {# Hidden field to pass account name, updated by JS if possible, or handle in backend #}
+          <input type="hidden" name="ad_account_name" id="ad_account_name_hidden">
+        </div>
+        <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Connect Selected Account</button>
+      </form>
+      <script>
+        // Optional JS to update hidden name field if you want the exact selected name
+        document.getElementById('ad_account_id').addEventListener('change', function() {
+          var selectedOption = this.options[this.selectedIndex];
+          document.getElementById('ad_account_name_hidden').value = selectedOption.dataset.name || selectedOption.text.split(' (ID:')[0];
+        });
+        // Trigger change on load if an option is pre-selected (not common here)
+        if (document.getElementById('ad_account_id').selectedIndex !== -1) {
+           document.getElementById('ad_account_id').dispatchEvent(new Event('change'));
+        }
+      </script>
+    {% else %}
+      <p class="text-red-500">No active ad accounts found or there was an error fetching them. Please ensure you have granted necessary permissions.</p>
+    {% endif %}
+    <p class="mt-4"><a href="{{ url_for('integration.hub') }}" class="text-blue-400 hover:underline">Back to Integrations</a></p>
+  </div>
+{% endblock %}
